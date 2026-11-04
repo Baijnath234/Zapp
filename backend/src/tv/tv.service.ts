@@ -68,10 +68,10 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
       });
     });
 
-    this.remoteAdapter.on('ready', (cert: any) => {
+    this.remoteAdapter.on('ready', async (cert: any) => {
       const state = this.remoteAdapter.getState();
       if (state.ip) {
-        this.storageService.saveTv({
+        await this.storageService.saveTv({
           ip: state.ip,
           name: state.name || 'Android TV',
           model: state.model || 'Android TV',
@@ -172,7 +172,7 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
     return this.storageService.getSavedTvs();
   }
 
-  forgetTv(ip: string): boolean {
+  async forgetTv(ip: string): Promise<boolean> {
     const state = this.remoteAdapter.getState();
     if (state.ip === ip) {
       this.disconnectTv();
@@ -184,8 +184,7 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
     return this.storageService.getSettings();
   }
 
-  updateSettings(dto: TvSettingsDto): any {
+  async updateSettings(dto: TvSettingsDto): Promise<any> {
     return this.storageService.updateSettings(dto);
   }
 }
-

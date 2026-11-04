@@ -146,15 +146,14 @@ export class TvGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
   }
 
   @SubscribeMessage('forget')
-  handleForget(@MessageBody() data: { ip: string }): void {
-    this.tvService.forgetTv(data.ip);
+  async handleForget(@MessageBody() data: { ip: string }): Promise<void> {
+    await this.tvService.forgetTv(data.ip);
     this.broadcast('saved_list', this.tvService.getSavedTvs());
   }
 
   @SubscribeMessage('update_settings')
-  handleUpdateSettings(@MessageBody() data: TvSettingsDto): void {
-    const updated = this.tvService.updateSettings(data);
+  async handleUpdateSettings(@MessageBody() data: TvSettingsDto): Promise<void> {
+    const updated = await this.tvService.updateSettings(data);
     this.broadcast('settings_updated', updated);
   }
 }
-

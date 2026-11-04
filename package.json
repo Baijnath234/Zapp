@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Zapp Android TV Remote Monorepo: NestJS WebSocket Backend & React Native Frontend",
   "scripts": {
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
     "start:backend": "cd backend && npm run start:dev",
     "start:mobile": "cd mobile && npm run start",
     "build:backend": "cd backend && npm run build",

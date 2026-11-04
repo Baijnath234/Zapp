@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zapp-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-zapp_user}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-zapp_secret}
+      POSTGRES_DB: ${DATABASE_NAME:-zapp_db}
+    ports:
+      # Port 5433 on the host maps to 5432 in the container (to avoid conflicting with any default local 5432 instance)
+      - "${DATABASE_PORT:-5433}:5432"
+    volumes:
+      - zapp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-zapp_user} -d ${DATABASE_NAME:-zapp_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  zapp_postgres_data:
+    name: zapp_postgres_data

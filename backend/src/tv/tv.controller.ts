@@ -52,8 +52,8 @@ export class TvController {
   }
 
   @Delete('saved/:ip')
-  forgetTv(@Param('ip') ip: string) {
-    const deleted = this.tvService.forgetTv(ip);
+  async forgetTv(@Param('ip') ip: string) {
+    const deleted = await this.tvService.forgetTv(ip);
     return {
       success: deleted,
       message: deleted ? 'TV forgotten successfully' : 'TV not found',
@@ -129,12 +129,11 @@ export class TvController {
 
   @Post('settings')
   @HttpCode(HttpStatus.OK)
-  updateSettings(@Body() dto: TvSettingsDto) {
-    const updated = this.tvService.updateSettings(dto);
+  async updateSettings(@Body() dto: TvSettingsDto) {
+    const updated = await this.tvService.updateSettings(dto);
     return {
       success: true,
       data: updated,
     };
   }
 }
-

@@ -10,10 +10,11 @@ A modern, high-performance Android TV remote application featuring a **NestJS** 
 - **Runtime:** Node.js 22+
 - **Language:** TypeScript
 - **Framework:** [NestJS](https://nestjs.com/) (Modular Architecture)
+- **Database:** PostgreSQL (Docker) with [TypeORM](https://typeorm.io/) (`@nestjs/typeorm`, `pg`)
 - **Real-Time Communication:** `ws` via NestJS WebSocket Gateway (`@nestjs/platform-ws`)
 - **TV Protocol:** [`androidtv-remote`](https://www.npmjs.com/package/androidtv-remote) (Pairing, KeyEvents, App Links, SSL Certificates)
 - **Local Network Discovery:** [`bonjour-service`](https://www.npmjs.com/package/bonjour-service) (mDNS/Zeroconf for `_androidtvremote2._tcp`, `_androidtvremote._tcp`, and `_googlecast._tcp`)
-- **Persistence:** Local JSON file store for paired TVs, SSL certificates, and preferences.
+- **Persistence:** PostgreSQL container store for paired TVs, SSL certificates, and preferences (with offline fallback).
 
 ### Frontend (`/mobile`)
 - **Framework:** [React Native](https://reactnative.dev/) (Expo / Cross-Platform iOS, Android & Web)
@@ -86,7 +87,13 @@ Zapp/
 - **Node.js**: v22+ (verified on Node.js v24)
 - **npm**: v10+
 
-### 2. Start the Backend Server
+### 2. Start the PostgreSQL Database (Docker)
+```bash
+docker compose up -d
+```
+This launches a healthy PostgreSQL container (`zapp-postgres`) on port `5433`.
+
+### 3. Start the Backend Server
 ```bash
 cd backend
 npm install
@@ -94,12 +101,12 @@ npm run start:dev
 ```
 - REST API: `http://localhost:3000/api/tv`
 - WebSocket Server: `ws://localhost:3000/ws`
+- PostgreSQL: `localhost:5433/zapp_db`
 
-### 3. Start the Mobile App
+### 4. Start the Mobile App
 ```bash
 cd mobile
-npm install
-npm run start
+npx expo start -c
 ```
 - Press `w` in the terminal to open the web browser preview.
 - Scan the QR code using the **Expo Go** app on your iPhone or Android device.
