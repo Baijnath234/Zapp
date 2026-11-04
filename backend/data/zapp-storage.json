@@ -1,0 +1,9 @@
+{
+  "savedTvs": [],
+  "lastConnectedIp": null,
+  "settings": {
+    "autoReconnect": true,
+    "wakeOnConnect": false,
+    "hapticFeedback": true
+  }
+}

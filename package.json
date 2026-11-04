@@ -1,0 +1,23 @@
+{
+  "name": "zapp-monorepo",
+  "version": "1.0.0",
+  "description": "Zapp Android TV Remote Monorepo: NestJS WebSocket Backend & React Native Frontend",
+  "scripts": {
+    "start:backend": "cd backend && npm run start:dev",
+    "start:mobile": "cd mobile && npm run start",
+    "build:backend": "cd backend && npm run build",
+    "typecheck:mobile": "cd mobile && npx tsc --noEmit"
+  },
+  "keywords": [
+    "android-tv",
+    "remote",
+    "nestjs",
+    "react-native",
+    "bonjour",
+    "websocket",
+    "zapp"
+  ],
+  "author": "Zapp Team",
+  "license": "MIT"
+}
+

@@ -1,0 +1,63 @@
+export const theme = {
+  light: {
+    bg: '#f3f2f8',
+    bg2: '#dcd9ec',
+    card: '#ffffff',
+    key: '#ffffff',
+    key2: '#e9e8f1',
+    ink: '#1d1b2a',
+    mute: '#6d6a80',
+    acc: '#0f9b86',
+    accink: '#ffffff',
+    red: '#d93a43',
+    ok: '#168a4f',
+    glow: 'rgba(15, 155, 134, 0.22)',
+    border: '#e4e2ed',
+    sh: {
+      shadowColor: '#281e50',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 10,
+      elevation: 3,
+    },
+    shSmall: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+  },
+  dark: {
+    bg: '#14131d',
+    bg2: '#241f3d',
+    card: '#1f1e2c',
+    key: '#2f2d44',
+    key2: '#262538',
+    ink: '#f1f0f8',
+    mute: '#9a97b0',
+    acc: '#6fe0c8',
+    accink: '#0b1f1b',
+    red: '#ff6168',
+    ok: '#5fdc9a',
+    glow: 'rgba(111, 224, 200, 0.2)',
+    border: '#2a283c',
+    sh: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    shSmall: {
+      shadowColor: '#ffffff',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+  },
+};
+
+export type ThemeColors = typeof theme.light;
+
