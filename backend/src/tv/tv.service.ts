@@ -168,6 +168,18 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
     return this.discoveryService.getDiscoveredTvs();
   }
 
+  getNetworkDevices(clientIp?: string) {
+    const devices = this.discoveryService.getNetworkDevices(clientIp);
+    const state = this.getState();
+    // Mark currently connected TV
+    return devices.map((d) => {
+      if (state.connected && state.ip === d.ip) {
+        return { ...d, status: 'connected' as const };
+      }
+      return d;
+    });
+  }
+
   getSavedTvs(): SavedTv[] {
     return this.storageService.getSavedTvs();
   }

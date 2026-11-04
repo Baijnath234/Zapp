@@ -16,6 +16,17 @@ export interface SavedTv {
   lastConnected?: number;
 }
 
+export interface NetworkDevice {
+  id: string;
+  name: string;
+  type: 'phone' | 'tv' | 'router' | 'server' | 'other';
+  ip: string;
+  model?: string;
+  status: 'connected' | 'online' | 'paired';
+  isCurrentDevice?: boolean;
+  lastSeen?: number;
+}
+
 export interface TvState {
   connected: boolean;
   pairingRequired: boolean;
@@ -38,7 +49,7 @@ export interface TvSettings {
   hapticFeedback: boolean;
 }
 
-export type ViewType = 'welcome' | 'connect' | 'remote';
+export type ViewType = 'welcome' | 'connect' | 'remote' | 'wifi';
 
 export type RemoteKey =
   | 'power'
@@ -66,4 +77,3 @@ export type RemoteKey =
   | '8'
   | '9'
   | 'del';
-

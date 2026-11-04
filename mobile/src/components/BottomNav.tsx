@@ -6,7 +6,7 @@ import { ViewType } from '../types/tv';
 interface BottomNavProps {
   colors: ThemeColors;
   currentView: ViewType;
-  onSelectView: (view: 'remote' | 'connect') => void;
+  onSelectView: (view: 'remote' | 'connect' | 'wifi') => void;
   insetBottom?: number;
 }
 
@@ -73,6 +73,29 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             Connection
           </Text>
         </TouchableOpacity>
+
+        {/* Wi-Fi Devices Tab */}
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            currentView === 'wifi' && { backgroundColor: colors.acc },
+          ]}
+          activeOpacity={0.8}
+          onPress={() => onSelectView('wifi')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: currentView === 'wifi' }}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color: currentView === 'wifi' ? colors.accink : colors.mute,
+              },
+            ]}
+          >
+            Wi-Fi
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -100,8 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
 });
-

@@ -90,6 +90,15 @@ export class TvGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     this.sendToClient(client, 'pong', { timestamp: Date.now() });
   }
 
+  @SubscribeMessage('get_network_devices')
+  handleGetNetworkDevices(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() data: { clientIp?: string },
+  ): void {
+    const devices = this.tvService.getNetworkDevices(data?.clientIp);
+    this.sendToClient(client, 'network_devices', devices);
+  }
+
   @SubscribeMessage('scan')
   async handleScan(): Promise<void> {
     this.broadcast('scanning', { isScanning: true });

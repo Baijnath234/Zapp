@@ -10,9 +10,11 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { theme } from './theme/colors';
 import { ViewType } from './types/tv';
 import { useTvConnection } from './hooks/useTvConnection';
+import { useWifiNetwork } from './hooks/useWifiNetwork';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { ConnectionScreen } from './screens/ConnectionScreen';
 import { RemoteScreen } from './screens/RemoteScreen';
+import { WifiDevicesScreen } from './screens/WifiDevicesScreen';
 import { BottomNav } from './components/BottomNav';
 import { PairModal } from './components/PairModal';
 import { Toast } from './components/Toast';
@@ -49,11 +51,18 @@ function MainApp() {
     updateBackendHost,
   } = useTvConnection();
 
+  const {
+    wifiInfo,
+    networkDevices,
+    isScanningWifi,
+    refreshWifiDevices,
+  } = useWifiNetwork(tvState, savedTvs, settings, connect, showToast);
+
   const handleGetStarted = () => {
     if (tvState.connected) {
       setCurrentView('remote');
     } else {
-      setCurrentView('connect');
+      setCurrentView('wifi'); // Show Wi-Fi devices right after Welcome!
     }
   };
 
@@ -115,9 +124,27 @@ function MainApp() {
             showToast={showToast}
           />
         )}
+
+        {currentView === 'wifi' && (
+          <WifiDevicesScreen
+            colors={colors}
+            wifiInfo={wifiInfo}
+            networkDevices={networkDevices}
+            isScanning={isScanningWifi}
+            tvState={tvState}
+            onRefresh={refreshWifiDevices}
+            onConnectTv={(tv) => {
+              connect(tv);
+              if (savedTvs.some((s) => s.ip === tv.ip)) {
+                setCurrentView('remote');
+              }
+            }}
+            onGoToRemote={() => setCurrentView('remote')}
+          />
+        )}
       </SafeAreaView>
 
-      {/* Persistent Bottom Tab Navigation (Only shown on Connect & Remote screens) */}
+      {/* Persistent Bottom Tab Navigation (Shown on Remote, Connect & Wi-Fi screens) */}
       {currentView !== 'welcome' && (
         <BottomNav
           colors={colors}

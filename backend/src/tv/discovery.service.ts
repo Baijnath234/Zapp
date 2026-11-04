@@ -183,5 +183,65 @@ export class DiscoveryService implements OnModuleInit, OnModuleDestroy {
   getIsScanning(): boolean {
     return this.isScanning;
   }
+
+  /**
+   * Get all active devices connected to the Wi-Fi network
+   */
+  getNetworkDevices(clientIp?: string): import('./dto/tv.dto').NetworkDevice[] {
+    const devices: import('./dto/tv.dto').NetworkDevice[] = [];
+    const discovered = this.getDiscoveredTvs();
+
+    // 1. Wi-Fi Router / Gateway
+    const gatewayIp = clientIp ? clientIp.replace(/\.\d+$/, '.1') : '192.168.1.1';
+    devices.push({
+      id: 'gateway',
+      name: 'Wi-Fi Gateway / Router',
+      type: 'router',
+      ip: gatewayIp,
+      model: 'Default Gateway',
+      status: 'online',
+      lastSeen: Date.now(),
+    });
+
+    // 2. Client Device (User's phone)
+    if (clientIp) {
+      devices.push({
+        id: 'client_phone',
+        name: 'This Phone',
+        type: 'phone',
+        ip: clientIp,
+        model: 'Mobile App',
+        status: 'connected',
+        isCurrentDevice: true,
+        lastSeen: Date.now(),
+      });
+    }
+
+    // 3. Zapp Backend Server & PostgreSQL
+    devices.push({
+      id: 'backend_server',
+      name: 'Zapp Server (NestJS & PostgreSQL)',
+      type: 'server',
+      ip: '127.0.0.1',
+      model: 'Node.js 22 + Docker',
+      status: 'online',
+      lastSeen: Date.now(),
+    });
+
+    // 4. Android TVs on the Wi-Fi
+    for (const tv of discovered) {
+      devices.push({
+        id: tv.id,
+        name: tv.name,
+        type: 'tv',
+        ip: tv.ip,
+        model: tv.model,
+        status: tv.isPaired ? 'paired' : 'online',
+        lastSeen: tv.lastSeen,
+      });
+    }
+
+    return devices;
+  }
 }
 

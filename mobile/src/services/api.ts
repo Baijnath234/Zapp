@@ -31,6 +31,12 @@ export const tvApi = {
     return json.data;
   },
 
+  async getNetworkDevices(): Promise<import('../types/tv').NetworkDevice[]> {
+    const res = await fetch(`${BASE_URL}/network-devices`);
+    const json = await res.json();
+    return json.data;
+  },
+
   async connect(ip: string, name?: string, model?: string): Promise<TvState> {
     const res = await fetch(`${BASE_URL}/connect`, {
       method: 'POST',

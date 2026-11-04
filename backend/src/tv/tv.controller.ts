@@ -43,6 +43,14 @@ export class TvController {
     };
   }
 
+  @Get('network-devices')
+  getNetworkDevices() {
+    return {
+      success: true,
+      data: this.tvService.getNetworkDevices(),
+    };
+  }
+
   @Get('saved')
   getSaved() {
     return {

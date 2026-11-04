@@ -66,6 +66,17 @@ export interface DiscoveredTv {
   lastSeen: number;
 }
 
+export interface NetworkDevice {
+  id: string;
+  name: string;
+  type: 'phone' | 'tv' | 'router' | 'server' | 'other';
+  ip: string;
+  model?: string;
+  status: 'connected' | 'online' | 'paired';
+  isCurrentDevice?: boolean;
+  lastSeen: number;
+}
+
 export interface SavedTv {
   ip: string;
   name: string;
