@@ -1,0 +1,27 @@
+{
+    # Optional: enter your ACME email for Let's Encrypt automated TLS certificates
+    # email your-email@domain.com
+}
+
+# When DOMAIN is set (e.g. DOMAIN=api.zapp.app), Caddy will automatically issue
+# and manage a free Let's Encrypt TLS certificate for HTTPS and WSS
+{$DOMAIN:localhost} {
+    # Reverse proxy HTTP API and WebSockets (/ws) to NestJS
+    reverse_proxy backend:3000 {
+        # Enable WebSocket streaming support
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Compression
+    encode gzip zstd
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}
+

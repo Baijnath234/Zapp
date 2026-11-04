@@ -15,14 +15,39 @@ import { SettingEntity } from '../tv/entities/setting.entity';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const logger = new Logger('DatabaseModule');
+        const databaseUrl = config.get<string>('DATABASE_URL');
+        const synchronize = config.get<string>('DATABASE_SYNCHRONIZE', 'true') === 'true';
+        const isProd = config.get<string>('NODE_ENV') === 'production';
+        const enableSsl =
+          config.get<string>('DATABASE_SSL') === 'true' ||
+          (databaseUrl && (databaseUrl.includes('sslmode=require') || databaseUrl.includes('ssl=true'))) ||
+          (isProd && !!databaseUrl);
+
+        const sslOptions = enableSsl ? { rejectUnauthorized: false } : false;
+
+        if (databaseUrl) {
+          logger.log(`Connecting to PostgreSQL via DATABASE_URL (SSL: ${enableSsl ? 'enabled' : 'disabled'})...`);
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [SavedTvEntity, SettingEntity],
+            synchronize,
+            retryAttempts: 10,
+            retryDelay: 3000,
+            autoLoadEntities: true,
+            ssl: sslOptions,
+            extra: enableSsl ? { ssl: { rejectUnauthorized: false } } : undefined,
+            logging: config.get<string>('DATABASE_LOGGING') === 'true',
+          };
+        }
+
         const host = config.get<string>('DATABASE_HOST', 'localhost');
         const port = Number(config.get<number>('DATABASE_PORT', 5433));
         const username = config.get<string>('DATABASE_USER', 'zapp_user');
         const password = config.get<string>('DATABASE_PASSWORD', 'zapp_secret');
         const database = config.get<string>('DATABASE_NAME', 'zapp_db');
-        const synchronize = config.get<string>('DATABASE_SYNCHRONIZE', 'true') === 'true';
 
-        logger.log(`Connecting to PostgreSQL on ${host}:${port}/${database}...`);
+        logger.log(`Connecting to PostgreSQL on ${host}:${port}/${database} (SSL: ${enableSsl ? 'enabled' : 'disabled'})...`);
 
         return {
           type: 'postgres',
@@ -36,6 +61,8 @@ import { SettingEntity } from '../tv/entities/setting.entity';
           retryAttempts: 10,
           retryDelay: 3000,
           autoLoadEntities: true,
+          ssl: sslOptions,
+          extra: enableSsl ? { ssl: { rejectUnauthorized: false } } : undefined,
           logging: config.get<string>('DATABASE_LOGGING') === 'true',
         };
       },

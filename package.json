@@ -5,6 +5,8 @@
   "scripts": {
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "docker:prod:up": "docker compose -f docker-compose.prod.yml up -d --build",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
     "start:backend": "cd backend && npm run start:dev",
     "start:mobile": "cd mobile && npm run start",
     "build:backend": "cd backend && npm run build",

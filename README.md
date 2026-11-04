@@ -138,8 +138,10 @@ npx expo start -c
 | `disconnect` | Client ➔ Server | `{}` | Disconnect from TV |
 
 ### REST Endpoints (`http://localhost:3000/api/tv`)
+- `GET /health` — Cloud orchestrator health check (returns `{ status: 'ok', uptime }`)
 - `GET /status` — Fetch current TV connection & mirror state
 - `GET /discover` — Trigger and return discovered Android TVs on the LAN
+- `GET /network-devices` — Return active devices on Wi-Fi subnet
 - `GET /saved` — Return all paired/saved TVs
 - `DELETE /saved/:ip` — Forget a saved TV
 - `POST /connect` — Connect to a TV by IP
@@ -149,4 +151,27 @@ npx expo start -c
 - `POST /power` — Toggle TV power
 - `POST /app` — Launch app (`{ appLink }`)
 - `GET /settings` & `POST /settings` — Get / update user settings
+
+---
+
+## ☁️ Cloud & Production Deployment
+
+Zapp is built for hybrid production operation:
+1. **Cloud Server Hub**: Handles multi-device synchronization, user saved TVs, SSL pairing certs, preferences, camera video relay, and real-time state broadcasts over secure `wss://` and `https://`.
+2. **Local Control & LAN Bridge**: Because Android TVs reside on private home subnets (`192.168.x.x`), the mobile phone on the same Wi-Fi executes remote commands and synchronizes state back to the cloud.
+
+### Deploy with Docker & Caddy (VPS / AWS / DigitalOcean)
+```bash
+# 1. Set your public domain
+export DOMAIN=api.zapp.app
+
+# 2. Start backend, postgres, and Caddy with automatic SSL
+npm run docker:prod:up
+```
+Caddy will automatically provision a free Let's Encrypt TLS certificate for `https://api.zapp.app` and `wss://api.zapp.app/ws`.
+
+### 1-Click Cloud Hosting (Railway / Render / Supabase)
+- **Railway / Render**: Connect your Git repo; Zapp includes a [`render.yaml`](file:///Users/scatix-dev03/Zapp/render.yaml) blueprint. Set `DATABASE_URL` (with SSL automatically detected) and the server binds to `0.0.0.0` with proxy trust enabled.
+- **Health Checks**: Built-in `/health` endpoint responds with 200 OK and uptime for load balancers.
+- **Proxy Keepalive**: 25s client-side and 30s server-side heartbeats keep WebSocket connections open 24/7 through AWS ALB, Cloudflare, and Nginx.
 

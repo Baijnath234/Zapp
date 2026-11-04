@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zapp-backend-prod
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://zapp_user:zapp_production_secret@postgres:5432/zapp_db
+      - DATABASE_SSL=false
+      - DATABASE_SYNCHRONIZE=true
+      - DATABASE_LOGGING=false
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - zapp-prod-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: zapp-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: zapp_user
+      POSTGRES_PASSWORD: zapp_production_secret
+      POSTGRES_DB: zapp_db
+    volumes:
+      - zapp_postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zapp_user -d zapp_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zapp-prod-net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: zapp-caddy-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - zapp_caddy_data:/data
+      - zapp_caddy_config:/config
+    depends_on:
+      - backend
+    networks:
+      - zapp-prod-net
+
+volumes:
+  zapp_postgres_prod_data:
+    driver: local
+  zapp_caddy_data:
+    driver: local
+  zapp_caddy_config:
+    driver: local
+
+networks:
+  zapp-prod-net:
+    driver: bridge
+

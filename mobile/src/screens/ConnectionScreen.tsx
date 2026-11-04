@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { ThemeColors } from '../theme/colors';
 import { DiscoveredTv, SavedTv, TvSettings, TvState } from '../types/tv';
+import { ParsedServerConfig } from '../services/serverConfig';
 
 interface ConnectionScreenProps {
   colors: ThemeColors;
@@ -22,6 +23,8 @@ interface ConnectionScreenProps {
   settings: TvSettings;
   backendHost?: string;
   isSocketConnected?: boolean;
+  serverLatency?: number;
+  serverConfig?: ParsedServerConfig;
   onScan: () => void;
   onConnect: (tv: { ip: string; name?: string; model?: string }) => void;
   onConnectIp: (ip: string) => void;
@@ -41,6 +44,8 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
   settings,
   backendHost = 'localhost',
   isSocketConnected = false,
+  serverLatency = 0,
+  serverConfig,
   onScan,
   onConnect,
   onConnectIp,
@@ -98,7 +103,9 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
             ]}
           />
           <Text style={[styles.serverStatusText, { color: colors.mute }]}>
-            {isSocketConnected ? 'Server live' : 'Offline / Standalone'}
+            {isSocketConnected
+              ? `${serverConfig?.isCloud ? 'Cloud ☁️' : 'Local 🏠'}${serverLatency > 0 ? ` · ${serverLatency}ms` : ' · Live'}`
+              : 'Offline / Standalone'}
           </Text>
         </View>
       </View>
@@ -389,30 +396,83 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
             thumbColor={Platform.OS === 'android' ? colors.card : undefined}
           />
         </View>
+      </View>
 
-        {/* Backend Server Host Configuration (for real devices / Expo Go) */}
-        <View style={[styles.toggleRow, { borderTopColor: colors.key2, borderTopWidth: 1 }]}>
-          <View style={styles.toggleTextWrap}>
-            <Text style={[styles.toggleTitle, { color: colors.ink }]}>
-              Backend Server Host
+      {/* 6. Server & Cloud Backend Card */}
+      <View style={[styles.card, { backgroundColor: colors.card }, colors.sh]}>
+        <View style={styles.cardHeader}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <Text style={[styles.cardTitle, { color: colors.ink }]}>
+              Server & Cloud Backend
             </Text>
-            <Text style={[styles.toggleSub, { color: colors.mute }]}>
-              {backendHost}:3000
+            <Text style={[styles.caption, { color: colors.mute, marginTop: 2 }]}>
+              {serverConfig?.isCloud ? 'Cloud Deployment Mode' : 'Local Gateway Mode'}
             </Text>
           </View>
+          <View style={[styles.serverModeBadge, { backgroundColor: colors.key2 }]}>
+            <Text style={[styles.serverModeText, { color: colors.ink }]}>
+              {serverConfig?.isSecure ? '🔒 WSS / HTTPS' : '⚡ WS / HTTP'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Server Endpoint Details */}
+        <View style={[styles.endpointBox, { backgroundColor: colors.key2 }]}>
+          <View style={styles.endpointRow}>
+            <Text style={[styles.endpointLabel, { color: colors.mute }]}>Host:</Text>
+            <Text style={[styles.endpointVal, { color: colors.ink }]} numberOfLines={1}>
+              {serverConfig?.hostDisplay || backendHost}
+            </Text>
+          </View>
+          <View style={styles.endpointRow}>
+            <Text style={[styles.endpointLabel, { color: colors.mute }]}>Latency:</Text>
+            <Text style={[styles.endpointVal, { color: isSocketConnected ? colors.ok : colors.red }]}>
+              {isSocketConnected ? (serverLatency > 0 ? `${serverLatency} ms` : 'Active') : 'Disconnected'}
+            </Text>
+          </View>
+          <View style={styles.endpointRow}>
+            <Text style={[styles.endpointLabel, { color: colors.mute }]}>Real-Time WS:</Text>
+            <Text style={[styles.endpointVal, { color: colors.ink }]} numberOfLines={1}>
+              {serverConfig?.wsUrl || `ws://${backendHost}:3000/ws`}
+            </Text>
+          </View>
+        </View>
+
+        {/* Quick Presets */}
+        <View style={styles.presetRow}>
           <TouchableOpacity
-            style={[styles.smallBtn, { backgroundColor: colors.key2 }]}
+            style={[styles.presetChip, { backgroundColor: colors.key2 }]}
+            activeOpacity={0.7}
+            onPress={() => {
+              setHostInput('localhost');
+              if (onUpdateBackendHost) onUpdateBackendHost('localhost');
+            }}
+          >
+            <Text style={[styles.presetText, { color: colors.ink }]}>🏠 Localhost</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.presetChip, { backgroundColor: colors.key2 }]}
+            activeOpacity={0.7}
+            onPress={() => {
+              setHostInput('https://zapp-remote.up.railway.app');
+              if (onUpdateBackendHost) onUpdateBackendHost('https://zapp-remote.up.railway.app');
+            }}
+          >
+            <Text style={[styles.presetText, { color: colors.ink }]}>☁️ Cloud Host</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.presetChip, { backgroundColor: colors.key2 }]}
             activeOpacity={0.7}
             onPress={() => setShowHostInput((prev) => !prev)}
           >
-            <Text style={[styles.smallBtnText, { color: colors.ink }]}>
-              {showHostInput ? 'Close' : 'Change'}
+            <Text style={[styles.presetText, { color: colors.acc }]}>
+              {showHostInput ? 'Hide' : 'Custom'}
             </Text>
           </TouchableOpacity>
         </View>
 
         {showHostInput && (
-          <View style={styles.ipRow}>
+          <View style={[styles.ipRow, { marginTop: 10 }]}>
             <TextInput
               style={[
                 styles.ipInput,
@@ -420,7 +480,7 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
               ]}
               value={hostInput}
               onChangeText={setHostInput}
-              placeholder="e.g. 192.168.1.100"
+              placeholder="e.g. https://api.zapp.app or 192.168.1.100"
               placeholderTextColor={colors.mute}
               autoCapitalize="none"
               autoCorrect={false}
@@ -431,9 +491,17 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
               onPress={handleHostSave}
             >
               <Text style={[styles.ipGoText, { color: colors.accink }]}>
-                Save
+                Apply
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {serverConfig?.isCloud && (
+          <View style={[styles.cloudInfoBox, { backgroundColor: colors.key2 }]}>
+            <Text style={[styles.cloudInfoText, { color: colors.mute }]}>
+              💡 <Text style={{ fontWeight: '700', color: colors.ink }}>Cloud Mode:</Text> Device state, pairing keys, and camera streams sync via secure WSS across all phones. For TV control, keep phone and TV on the same home Wi-Fi network.
+            </Text>
           </View>
         )}
       </View>
@@ -710,5 +778,57 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 6,
     lineHeight: 18,
+  },
+  serverModeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  serverModeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  endpointBox: {
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 10,
+    gap: 6,
+  },
+  endpointRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  endpointLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  endpointVal: {
+    fontSize: 12,
+    fontWeight: '600',
+    maxWidth: '70%',
+  },
+  presetRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  presetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  presetText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cloudInfoBox: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 8,
+  },
+  cloudInfoText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

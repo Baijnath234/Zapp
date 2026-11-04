@@ -8,7 +8,7 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, OnModuleDestroy } from '@nestjs/common';
 import { Server, WebSocket } from 'ws';
 import { TvService } from './tv.service';
 import { ConnectTvDto, PairTvDto, SendKeyDto, LaunchAppDto, TvSettingsDto } from './dto/tv.dto';
@@ -20,10 +20,11 @@ import { Subscription } from 'rxjs';
   },
   path: '/ws',
 })
-export class TvGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class TvGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy {
   private readonly logger = new Logger(TvGateway.name);
   private eventSub: Subscription | null = null;
   private clients = new Set<WebSocket>();
+  private heartbeatInterval: NodeJS.Timeout | null = null;
 
   @WebSocketServer()
   server: Server;
@@ -37,6 +38,24 @@ export class TvGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     this.eventSub = this.tvService.eventStream$.subscribe(({ event, data }) => {
       this.broadcast(event, data);
     });
+
+    // Cloud proxy keepalive heartbeat (every 30s) to prevent Cloudflare/ALB/Nginx idle timeouts
+    this.heartbeatInterval = setInterval(() => {
+      if (this.clients.size > 0) {
+        this.broadcast('keepalive', { timestamp: Date.now() });
+      }
+    }, 30000);
+  }
+
+  onModuleDestroy() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    if (this.eventSub) {
+      this.eventSub.unsubscribe();
+      this.eventSub = null;
+    }
   }
 
   handleConnection(client: WebSocket, ...args: any[]) {

@@ -28,6 +28,7 @@ export function useTvConnection() {
   const [isScanning, setIsScanning] = useState(false);
   const [backendHost, setBackendHostState] = useState('localhost');
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [serverLatency, setServerLatency] = useState(0);
   const [settings, setSettings] = useState<TvSettings>({
     autoReconnect: true,
     wakeOnConnect: false,
@@ -83,6 +84,12 @@ export function useTvConnection() {
       switch (event) {
         case 'socket_status':
           setIsSocketConnected(!!data.connected);
+          break;
+
+        case 'latency':
+          if (data && typeof data.ms === 'number') {
+            setServerLatency(data.ms);
+          }
           break;
 
         case 'init_state':
@@ -347,6 +354,8 @@ export function useTvConnection() {
     isScanning,
     backendHost,
     isSocketConnected,
+    serverLatency,
+    serverConfig: tvSocket.getConfig(),
     settings,
     pendingPairTv,
     toastMessage,

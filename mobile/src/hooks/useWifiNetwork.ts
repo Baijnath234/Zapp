@@ -114,10 +114,10 @@ export function useWifiNetwork(
         },
         {
           id: 'server_1',
-          name: 'Zapp Backend & DB',
+          name: tvSocket.getConfig().isCloud ? 'Zapp Cloud Server' : 'Zapp Local Gateway',
           type: 'server',
-          ip: '127.0.0.1',
-          model: 'NestJS + PostgreSQL (Docker)',
+          ip: tvSocket.getConfig().hostDisplay,
+          model: tvSocket.getConfig().isCloud ? 'Cloud (PostgreSQL + WSS)' : 'NestJS + Docker PostgreSQL',
           status: 'online',
           lastSeen: Date.now(),
         },

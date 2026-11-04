@@ -34,6 +34,8 @@ function MainApp() {
     isScanning,
     backendHost,
     isSocketConnected,
+    serverLatency,
+    serverConfig,
     settings,
     pendingPairTv,
     toastMessage,
@@ -104,6 +106,8 @@ function MainApp() {
             settings={settings}
             backendHost={backendHost}
             isSocketConnected={isSocketConnected}
+            serverLatency={serverLatency}
+            serverConfig={serverConfig}
             onScan={scan}
             onConnect={(tv) => {
               connect(tv);
