@@ -17,6 +17,9 @@ export class SavedTvEntity {
   @Column({ type: 'varchar', length: 128, default: 'Android TV' })
   model: string;
 
+  @Column({ type: 'varchar', length: 32, nullable: true })
+  macAddress: string;
+
   @Column({ type: 'jsonb', nullable: true })
   certificate: any;
 

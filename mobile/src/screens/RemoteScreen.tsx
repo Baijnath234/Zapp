@@ -2,15 +2,26 @@ import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Modal,
+  PanResponder,
 } from 'react-native';
 import { ThemeColors } from '../theme/colors';
-import { TvScreenPreview, APPS } from '../components/TvScreenPreview';
+import { TvScreenPreview } from '../components/TvScreenPreview';
 import { DPad } from '../components/DPad';
 import { TvState, RemoteKey } from '../types/tv';
 import { useHaptics } from '../hooks/useHaptics';
+
+export const STREAMING_APPS = [
+  { name: 'YouTube', color: '#ff0000', icon: '▶', url: 'https://www.youtube.com' },
+  { name: 'Netflix', color: '#e50914', icon: 'N', url: 'https://www.netflix.com' },
+  { name: 'Prime Video', color: '#00a8e1', icon: 'P', url: 'https://app.primevideo.com' },
+  { name: 'Disney+', color: '#113ccf', icon: 'D+', url: 'https://www.disneyplus.com' },
+  { name: 'Spotify', color: '#1db954', icon: '♫', url: 'https://open.spotify.com' },
+];
 
 interface RemoteScreenProps {
   colors: ThemeColors;
@@ -18,6 +29,7 @@ interface RemoteScreenProps {
   onSendKey: (key: RemoteKey) => void;
   onSendPower: () => void;
   onSendAppLink: (url: string) => void;
+  onSendText?: (text: string) => void;
   onGoToConnect: () => void;
   hapticEnabled: boolean;
   showToast: (msg: string) => void;
@@ -31,12 +43,16 @@ export const RemoteScreen: React.FC<RemoteScreenProps> = ({
   onSendKey,
   onSendPower,
   onSendAppLink,
+  onSendText,
   onGoToConnect,
   hapticEnabled,
   showToast,
 }) => {
   const { triggerHaptic } = useHaptics(hapticEnabled);
 
+  const [controlMode, setControlMode] = useState<'dpad' | 'trackpad'>('dpad');
+  const [showKeyboardModal, setShowKeyboardModal] = useState(false);
+  const [textInputVal, setTextInputVal] = useState('');
   const [focusIndex, setFocusIndex] = useState(0);
   const [showNumberPad, setShowNumberPad] = useState(false);
   const [channelNumber, setChannelNumber] = useState(7);
@@ -118,15 +134,18 @@ export const RemoteScreen: React.FC<RemoteScreenProps> = ({
     if (!checkReady()) return;
     onSendKey(dir);
 
-    const totalApps = APPS.length;
+    const totalApps = STREAMING_APPS.length;
     if (tvState.activeInput === 'Home' && !tvState.currentApp) {
       if (dir === 'left') setFocusIndex((prev) => (prev + totalApps - 1) % totalApps);
       if (dir === 'right') setFocusIndex((prev) => (prev + 1) % totalApps);
       if (dir === 'up') setFocusIndex((prev) => (prev + totalApps - 3) % totalApps);
       if (dir === 'down') setFocusIndex((prev) => (prev + 3) % totalApps);
       if (dir === 'ok') {
-        const selectedApp = APPS[focusIndex];
-        onSendAppLink(selectedApp.name);
+        const selectedApp = STREAMING_APPS[focusIndex];
+        if (selectedApp) {
+          onSendAppLink(selectedApp.url);
+          showOsd(`Launching ${selectedApp.name}`);
+        }
       }
     } else if (tvState.activeInput === 'TV') {
       if (dir === 'up') handleChannel(1);
@@ -175,6 +194,45 @@ export const RemoteScreen: React.FC<RemoteScreenProps> = ({
     }, 1300);
   };
 
+  const handleSendTextSubmit = () => {
+    if (!textInputVal.trim()) return;
+    triggerHaptic('medium');
+    if (onSendText) {
+      onSendText(textInputVal.trim());
+      showToast(`Sent "${textInputVal.trim()}" to TV`);
+    }
+    setTextInputVal('');
+    setShowKeyboardModal(false);
+  };
+
+  // Touchpad PanResponder for swipe navigation
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (_, gestureState) => {
+        const { dx, dy } = gestureState;
+        const threshold = 25;
+
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+          // Single tap = OK
+          handleDPad('ok');
+        } else if (Math.abs(dx) > Math.abs(dy)) {
+          if (dx > threshold) {
+            handleDPad('right');
+          } else if (dx < -threshold) {
+            handleDPad('left');
+          }
+        } else {
+          if (dy > threshold) {
+            handleDPad('down');
+          } else if (dy < -threshold) {
+            handleDPad('up');
+          }
+        }
+      },
+    }),
+  ).current;
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.bg }]}
@@ -213,9 +271,34 @@ export const RemoteScreen: React.FC<RemoteScreenProps> = ({
         osdProgress={osdProgress}
       />
 
+      {/* Quick Streaming Apps Bar */}
+      <View style={[styles.appsBarCard, { backgroundColor: colors.card }, colors.shSmall]}>
+        <Text style={[styles.appsBarTitle, { color: colors.mute }]}>QUICK LAUNCH APPS</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.appsScroll}>
+          {STREAMING_APPS.map((app) => (
+            <TouchableOpacity
+              key={app.name}
+              style={[styles.appBadge, { backgroundColor: colors.key2 }]}
+              activeOpacity={0.7}
+              onPress={() => {
+                triggerHaptic('medium');
+                if (!checkReady()) return;
+                onSendAppLink(app.url);
+                showOsd(`Launching ${app.name}`);
+              }}
+            >
+              <View style={[styles.appIconCircle, { backgroundColor: app.color }]}>
+                <Text style={styles.appIconLetter}>{app.icon}</Text>
+              </View>
+              <Text style={[styles.appBadgeText, { color: colors.ink }]}>{app.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       {/* Remote Control Panel */}
       <View style={[styles.remoteCard, { backgroundColor: colors.card }, colors.sh]}>
-        {/* Row 1: Power, Source, Mute */}
+        {/* Row 1: Power, Source, Mute, Keyboard Search */}
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.remoteBtn, styles.powerBtn]}
@@ -241,10 +324,81 @@ export const RemoteScreen: React.FC<RemoteScreenProps> = ({
           >
             <Text style={[styles.btnText, { color: colors.ink }]}>Mute</Text>
           </TouchableOpacity>
+
+          {/* Keyboard Search on TV Button */}
+          <TouchableOpacity
+            style={[styles.remoteBtn, { backgroundColor: colors.key2 }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              triggerHaptic('light');
+              setShowKeyboardModal(true);
+            }}
+            accessibilityLabel="Keyboard Search"
+          >
+            <Text style={styles.keyboardIcon}>⌨️</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Circular D-Pad */}
-        <DPad colors={colors} onPressDirection={handleDPad} />
+        {/* D-Pad vs Trackpad Mode Selector */}
+        <View style={styles.modePillRow}>
+          <TouchableOpacity
+            style={[
+              styles.navModeBtn,
+              controlMode === 'dpad' && { backgroundColor: colors.acc },
+            ]}
+            activeOpacity={0.8}
+            onPress={() => {
+              triggerHaptic('light');
+              setControlMode('dpad');
+            }}
+          >
+            <Text
+              style={[
+                styles.navModeText,
+                { color: controlMode === 'dpad' ? colors.accink : colors.mute },
+              ]}
+            >
+              D-Pad
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.navModeBtn,
+              controlMode === 'trackpad' && { backgroundColor: colors.acc },
+            ]}
+            activeOpacity={0.8}
+            onPress={() => {
+              triggerHaptic('light');
+              setControlMode('trackpad');
+            }}
+          >
+            <Text
+              style={[
+                styles.navModeText,
+                { color: controlMode === 'trackpad' ? colors.accink : colors.mute },
+              ]}
+            >
+              Trackpad
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Central Controller: D-Pad OR Touchpad Surface */}
+        {controlMode === 'dpad' ? (
+          <DPad colors={colors} onPressDirection={handleDPad} />
+        ) : (
+          <View
+            style={[styles.trackpadSurface, { backgroundColor: colors.key2 }]}
+            {...panResponder.panHandlers}
+          >
+            <View style={styles.trackpadCenterIcon}>
+              <Text style={[styles.trackpadHint, { color: colors.mute }]}>
+                Swipe to Navigate · Tap to Select (OK)
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Row 2: Back, Home, 123 Toggle */}
         <View style={styles.buttonRow}>
@@ -364,6 +518,52 @@ export const RemoteScreen: React.FC<RemoteScreenProps> = ({
           </View>
         </View>
       </View>
+
+      {/* Mobile Keyboard to TV Modal */}
+      <Modal
+        visible={showKeyboardModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowKeyboardModal(false)}
+      >
+        <View style={styles.modalScrim}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card }, colors.sh]}>
+            <Text style={[styles.modalTitle, { color: colors.ink }]}>Type on TV</Text>
+            <Text style={[styles.modalSub, { color: colors.mute }]}>
+              Type text, titles or search queries to send directly to your TV.
+            </Text>
+
+            <TextInput
+              style={[styles.modalInput, { backgroundColor: colors.key2, color: colors.ink }]}
+              value={textInputVal}
+              onChangeText={setTextInputVal}
+              placeholder="e.g. Inception or Stranger Things"
+              placeholderTextColor={colors.mute}
+              autoFocus
+              returnKeyType="search"
+              onSubmitEditing={handleSendTextSubmit}
+            />
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: colors.acc }]}
+                activeOpacity={0.8}
+                onPress={handleSendTextSubmit}
+              >
+                <Text style={[styles.modalBtnText, { color: colors.accink }]}>Send to TV</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtn, { backgroundColor: colors.key2 }]}
+                activeOpacity={0.8}
+                onPress={() => setShowKeyboardModal(false)}
+              >
+                <Text style={[styles.modalBtnText, { color: colors.ink }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -409,6 +609,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  appsBarCard: {
+    borderRadius: 18,
+    padding: 12,
+    gap: 8,
+  },
+  appsBarTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  appsScroll: {
+    gap: 10,
+    paddingVertical: 2,
+  },
+  appBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 8,
+  },
+  appIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appIconLetter: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  appBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
   remoteCard: {
     borderRadius: 28,
     padding: 16,
@@ -434,9 +672,50 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
   },
+  keyboardIcon: {
+    fontSize: 20,
+  },
   btnText: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  modePillRow: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 14,
+    padding: 3,
+    gap: 4,
+  },
+  navModeBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 11,
+  },
+  navModeText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  trackpadSurface: {
+    width: 220,
+    height: 220,
+    borderRadius: 24,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  trackpadCenterIcon: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  trackpadHint: {
+    fontSize: 12,
+    textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 18,
   },
   numberGrid: {
     gap: 8,
@@ -486,5 +765,49 @@ const styles = StyleSheet.create({
     marginVertical: 2,
     textTransform: 'uppercase',
   },
+  modalScrim: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 22,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  modalSub: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  modalInput: {
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    marginTop: 4,
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 6,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
 });
-

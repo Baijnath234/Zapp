@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { StorageService } from './storage.service';
 import { DiscoveryService } from './discovery.service';
 import { AndroidRemoteAdapter } from './android-remote.adapter';
+import { WolService } from './wol.service';
 import { ConnectTvDto, DiscoveredTv, PairTvDto, SavedTv, SendKeyDto, TvSettingsDto, TvState } from './dto/tv.dto';
 
 export interface WebSocketEventMessage {
@@ -20,6 +21,7 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly storageService: StorageService,
     private readonly discoveryService: DiscoveryService,
+    private readonly wolService: WolService,
   ) {
     this.remoteAdapter = new AndroidRemoteAdapter();
     this.bindRemoteEvents();
@@ -131,6 +133,15 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
     const cert = saved?.certificate;
     const name = dto.name || saved?.name || 'Android TV';
     const model = dto.model || saved?.model || 'Android TV';
+    const mac = dto.macAddress || saved?.macAddress;
+
+    // Wake TV if wakeOnConnect setting is active
+    const settings = this.storageService.getSettings();
+    if (settings.wakeOnConnect && mac) {
+      this.logger.log(`Wake-on-connect enabled: waking ${name} (${mac})`);
+      await this.wolService.wake(mac);
+      await new Promise((r) => setTimeout(r, 800));
+    }
 
     await this.remoteAdapter.connect(dto.ip, name, model, cert);
     return this.remoteAdapter.getState();
@@ -142,6 +153,14 @@ export class TvService implements OnModuleInit, OnModuleDestroy {
 
   sendKey(dto: SendKeyDto): boolean {
     return this.remoteAdapter.sendKey(dto.key, dto.direction);
+  }
+
+  sendText(text: string): boolean {
+    return this.remoteAdapter.sendText(text);
+  }
+
+  sendWakeOnLan(mac: string): Promise<boolean> {
+    return this.wolService.wake(mac);
   }
 
   sendPower(): boolean {

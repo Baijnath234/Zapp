@@ -22,6 +22,7 @@ A modern, high-performance Android TV remote application featuring a **NestJS** 
 - **Camera with Wi-Fi:** `expo-camera` (QR TV scanner, barcode pairing & live Wi-Fi camera streaming/casting)
 - **Network Discovery:** `expo-network` (real-time Wi-Fi IP detection and device subnet scanner)
 - **Persistence:** `@react-native-async-storage/async-storage` (offline-first storage for paired TVs & settings)
+- **Input & Navigation:** Dual-mode D-Pad and Touchpad swipe gestures, plus on-screen mobile keyboard for TV searching
 - **Styling:** Custom theme system implementing the Zapp design specifications (Light and Dark mode)
 - **Icons & Graphics:** `react-native-svg` (custom animated Zapp TV frame, stand, transmitter dot, and signal wave arcs)
 - **Haptics:** `expo-haptics` with fallback to `navigator.vibrate` on web
@@ -38,6 +39,7 @@ Zapp/
 │   │   ├── tv/
 │   │   │   ├── dto/tv.dto.ts                  # DTOs & state interfaces
 │   │   │   ├── storage.service.ts             # Paired TVs & settings persistence
+│   │   │   ├── wol.service.ts                 # Wake-on-LAN UDP magic packet sender
 │   │   │   ├── discovery.service.ts           # bonjour-service mDNS scanner
 │   │   │   ├── android-remote.adapter.ts      # androidtv-remote adapter & key mappings
 │   │   │   ├── tv.service.ts                  # TV coordinator & event stream

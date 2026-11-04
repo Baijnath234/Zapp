@@ -127,13 +127,42 @@ export class AndroidRemoteAdapter extends EventEmitter {
         this.handleDisconnect('Connection closed by remote TV');
       });
 
-      // Start connection with a timeout
-      const startPromise = this.remoteInstance.start();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timed out')), 5000),
-      );
+      // Check if TV is responsive (secret or ready event emitted) without interrupting pairing
+      let hasResponded = false;
+      let connectionTimeout: any = null;
 
-      await Promise.race([startPromise, timeoutPromise]);
+      const connectionCheck = new Promise<void>((resolve, reject) => {
+        connectionTimeout = setTimeout(() => {
+          if (!hasResponded) {
+            reject(new Error('TV network connection timed out'));
+          }
+        }, 4000);
+
+        this.remoteInstance.once('secret', () => {
+          hasResponded = true;
+          if (connectionTimeout) clearTimeout(connectionTimeout);
+          resolve();
+        });
+
+        this.remoteInstance.once('ready', () => {
+          hasResponded = true;
+          if (connectionTimeout) clearTimeout(connectionTimeout);
+          resolve();
+        });
+
+        this.remoteInstance.once('error', (err: any) => {
+          hasResponded = true;
+          if (connectionTimeout) clearTimeout(connectionTimeout);
+          reject(err);
+        });
+      });
+
+      // Start the underlying remote protocol
+      this.remoteInstance.start().catch((err: any) => {
+        this.logger.warn(`Remote process finished with: ${err?.message || err}`);
+      });
+
+      await connectionCheck;
       return true;
     } catch (err: any) {
       this.logger.warn(`Failed to connect directly to physical TV at ${ip}: ${err.message}.`);
@@ -255,6 +284,34 @@ export class AndroidRemoteAdapter extends EventEmitter {
       this.logger.error(`Failed to launch app ${url}`, err);
       return false;
     }
+  }
+
+  sendText(text: string): boolean {
+    if (!text) return false;
+    this.logger.log(`Typing text on TV: "${text}"`);
+
+    for (const char of text) {
+      const lower = char.toLowerCase();
+      let code: number | null = null;
+      if (lower >= 'a' && lower <= 'z') {
+        code = RemoteKeyCode.KEYCODE_A + (lower.charCodeAt(0) - 'a'.charCodeAt(0));
+      } else if (lower >= '0' && lower <= '9') {
+        code = RemoteKeyCode.KEYCODE_0 + (lower.charCodeAt(0) - '0'.charCodeAt(0));
+      } else if (char === ' ') {
+        code = RemoteKeyCode.KEYCODE_SPACE;
+      } else if (char === '\n') {
+        code = RemoteKeyCode.KEYCODE_ENTER;
+      }
+
+      if (code) {
+        if (!this.isSimulation && this.remoteInstance) {
+          try {
+            this.remoteInstance.sendKey(code, RemoteDirection.SHORT);
+          } catch {}
+        }
+      }
+    }
+    return true;
   }
 
   private handleLocalStateForCommand(key: string) {

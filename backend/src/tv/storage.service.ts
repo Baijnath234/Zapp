@@ -94,7 +94,8 @@ export class StorageService implements OnModuleInit {
       this.logger.log('PostgreSQL storage synchronization complete');
     } catch (err: any) {
       this.isDbConnected = false;
-      this.logger.warn(`Could not sync with PostgreSQL (${err.message}). Using local storage fallback.`);
+      this.logger.warn(`Could not sync with PostgreSQL (${err.message}). Retrying in 4s...`);
+      setTimeout(() => this.syncFromDatabase(), 4000);
     }
   }
 

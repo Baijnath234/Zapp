@@ -12,6 +12,7 @@ export interface SavedTv {
   ip: string;
   name: string;
   model: string;
+  macAddress?: string;
   pairedAt?: number;
   lastConnected?: number;
 }

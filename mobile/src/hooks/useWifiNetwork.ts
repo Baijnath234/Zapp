@@ -184,8 +184,11 @@ export function useWifiNetwork(
 
       // Auto-reconnect to last TV if enabled
       if (settings.autoReconnect && !tvState.connected) {
-        const lastIp = await mobileStorage.getLastTvIp();
-        const targetTv = savedTvs.find((s) => s.ip === lastIp) || savedTvs[0];
+        const [lastIp, storedTvs] = await Promise.all([
+          mobileStorage.getLastTvIp(),
+          mobileStorage.getSavedTvs(),
+        ]);
+        const targetTv = storedTvs.find((s) => s.ip === lastIp) || storedTvs[0];
         if (targetTv) {
           showToast(`Wi-Fi active (${ip}) · Connecting to ${targetTv.name}...`);
           connectTv({ ip: targetTv.ip, name: targetTv.name, model: targetTv.model });

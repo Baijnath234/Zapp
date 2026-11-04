@@ -15,6 +15,10 @@ export class ConnectTvDto {
   @IsString()
   @IsOptional()
   model?: string;
+
+  @IsString()
+  @IsOptional()
+  macAddress?: string;
 }
 
 export class PairTvDto {
@@ -81,6 +85,7 @@ export interface SavedTv {
   ip: string;
   name: string;
   model: string;
+  macAddress?: string;
   certificate?: any;
   pairedAt: number;
   lastConnected?: number;

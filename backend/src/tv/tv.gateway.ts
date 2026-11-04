@@ -139,6 +139,16 @@ export class TvGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayD
     this.tvService.sendKey(data);
   }
 
+  @SubscribeMessage('text')
+  handleText(@MessageBody() data: { text: string }): void {
+    this.tvService.sendText(data.text);
+  }
+
+  @SubscribeMessage('wake')
+  async handleWake(@MessageBody() data: { mac: string }): Promise<void> {
+    await this.tvService.sendWakeOnLan(data.mac);
+  }
+
   @SubscribeMessage('power')
   handlePower(): void {
     this.tvService.sendPower();

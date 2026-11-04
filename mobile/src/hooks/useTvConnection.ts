@@ -322,6 +322,14 @@ export function useTvConnection() {
     tvSocket.send('app', { appLink: url });
   }, []);
 
+  const sendText = useCallback((text: string) => {
+    tvSocket.send('text', { text });
+  }, []);
+
+  const sendWake = useCallback((mac: string) => {
+    tvSocket.send('wake', { mac });
+  }, []);
+
   const updateSetting = useCallback((key: keyof TvSettings, value: boolean) => {
     setSettings((prev) => {
       const updated = { ...prev, [key]: value };
@@ -353,6 +361,8 @@ export function useTvConnection() {
     sendKey,
     sendPower,
     sendAppLink,
+    sendText,
+    sendWake,
     updateSetting,
     updateBackendHost,
   };

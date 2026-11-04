@@ -48,6 +48,7 @@ function MainApp() {
     sendKey,
     sendPower,
     sendAppLink,
+    sendText,
     updateSetting,
     updateBackendHost,
   } = useTvConnection();
@@ -126,6 +127,7 @@ function MainApp() {
             onSendKey={sendKey}
             onSendPower={sendPower}
             onSendAppLink={sendAppLink}
+            onSendText={sendText}
             onGoToConnect={() => setCurrentView('connect')}
             hapticEnabled={settings.hapticFeedback}
             showToast={showToast}

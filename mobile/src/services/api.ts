@@ -67,6 +67,26 @@ export const tvApi = {
     return json.success;
   },
 
+  async sendText(text: string): Promise<boolean> {
+    const res = await fetch(`${BASE_URL}/text`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    const json = await res.json();
+    return json.success;
+  },
+
+  async sendWake(mac: string): Promise<boolean> {
+    const res = await fetch(`${BASE_URL}/wake`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mac }),
+    });
+    const json = await res.json();
+    return json.success;
+  },
+
   async sendPower(): Promise<boolean> {
     const res = await fetch(`${BASE_URL}/power`, {
       method: 'POST',

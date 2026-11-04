@@ -108,6 +108,26 @@ export class TvController {
     };
   }
 
+  @Post('text')
+  @HttpCode(HttpStatus.OK)
+  sendText(@Body() data: { text: string }) {
+    const success = this.tvService.sendText(data.text);
+    return {
+      success,
+      text: data.text,
+    };
+  }
+
+  @Post('wake')
+  @HttpCode(HttpStatus.OK)
+  async wake(@Body() data: { mac: string }) {
+    const success = await this.tvService.sendWakeOnLan(data.mac);
+    return {
+      success,
+      mac: data.mac,
+    };
+  }
+
   @Post('power')
   @HttpCode(HttpStatus.OK)
   sendPower() {
