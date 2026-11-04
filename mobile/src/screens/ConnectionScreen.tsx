@@ -20,12 +20,15 @@ interface ConnectionScreenProps {
   savedTvs: SavedTv[];
   isScanning: boolean;
   settings: TvSettings;
+  backendHost?: string;
+  isSocketConnected?: boolean;
   onScan: () => void;
   onConnect: (tv: { ip: string; name?: string; model?: string }) => void;
   onConnectIp: (ip: string) => void;
   onDisconnect: () => void;
   onForgetTv: (ip: string) => void;
   onUpdateSetting: (key: keyof TvSettings, value: boolean) => void;
+  onUpdateBackendHost?: (host: string) => void;
 }
 
 export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
@@ -35,15 +38,20 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
   savedTvs,
   isScanning,
   settings,
+  backendHost = 'localhost',
+  isSocketConnected = false,
   onScan,
   onConnect,
   onConnectIp,
   onDisconnect,
   onForgetTv,
   onUpdateSetting,
+  onUpdateBackendHost,
 }) => {
   const [ipInput, setIpInput] = useState('');
   const [ipError, setIpError] = useState('');
+  const [hostInput, setHostInput] = useState(backendHost);
+  const [showHostInput, setShowHostInput] = useState(false);
   const [faqExpanded, setFaqExpanded] = useState<{ [key: string]: boolean }>({});
 
   const handleIpConnect = () => {
@@ -61,6 +69,13 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
     onConnectIp(trimmed);
   };
 
+  const handleHostSave = () => {
+    if (onUpdateBackendHost && hostInput.trim()) {
+      onUpdateBackendHost(hostInput.trim());
+      setShowHostInput(false);
+    }
+  };
+
   const toggleFaq = (key: string) => {
     setFaqExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -71,7 +86,20 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.pageTitle, { color: colors.ink }]}>Connection</Text>
+      <View style={styles.titleRow}>
+        <Text style={[styles.pageTitle, { color: colors.ink }]}>Connection</Text>
+        <View style={styles.serverStatusBadge}>
+          <View
+            style={[
+              styles.miniDot,
+              { backgroundColor: isSocketConnected ? colors.ok : colors.mute },
+            ]}
+          />
+          <Text style={[styles.serverStatusText, { color: colors.mute }]}>
+            {isSocketConnected ? 'Server live' : 'Offline / Standalone'}
+          </Text>
+        </View>
+      </View>
 
       {/* 1. Status Card */}
       <View style={[styles.card, { backgroundColor: colors.card }, colors.sh]}>
@@ -340,6 +368,53 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
             thumbColor={Platform.OS === 'android' ? colors.card : undefined}
           />
         </View>
+
+        {/* Backend Server Host Configuration (for real devices / Expo Go) */}
+        <View style={[styles.toggleRow, { borderTopColor: colors.key2, borderTopWidth: 1 }]}>
+          <View style={styles.toggleTextWrap}>
+            <Text style={[styles.toggleTitle, { color: colors.ink }]}>
+              Backend Server Host
+            </Text>
+            <Text style={[styles.toggleSub, { color: colors.mute }]}>
+              {backendHost}:3000
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.smallBtn, { backgroundColor: colors.key2 }]}
+            activeOpacity={0.7}
+            onPress={() => setShowHostInput((prev) => !prev)}
+          >
+            <Text style={[styles.smallBtnText, { color: colors.ink }]}>
+              {showHostInput ? 'Close' : 'Change'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {showHostInput && (
+          <View style={styles.ipRow}>
+            <TextInput
+              style={[
+                styles.ipInput,
+                { backgroundColor: colors.key2, color: colors.ink },
+              ]}
+              value={hostInput}
+              onChangeText={setHostInput}
+              placeholder="e.g. 192.168.1.100"
+              placeholderTextColor={colors.mute}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity
+              style={[styles.ipGoBtn, { backgroundColor: colors.acc }]}
+              activeOpacity={0.8}
+              onPress={handleHostSave}
+            >
+              <Text style={[styles.ipGoText, { color: colors.accink }]}>
+                Save
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* 6. FAQ Accordion */}
@@ -395,11 +470,33 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
   pageTitle: {
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.4,
-    marginVertical: 4,
+  },
+  serverStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  miniDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  serverStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   card: {
     borderRadius: 22,
@@ -500,12 +597,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
+    marginVertical: 4,
   },
   ipInput: {
     flex: 1,
     height: 46,
     borderRadius: 12,
     borderWidth: 2,
+    borderColor: 'transparent',
     paddingHorizontal: 12,
     fontSize: 15,
   },
@@ -568,4 +667,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-

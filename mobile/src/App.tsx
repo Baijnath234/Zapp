@@ -29,6 +29,8 @@ function MainApp() {
     discoveredTvs,
     savedTvs,
     isScanning,
+    backendHost,
+    isSocketConnected,
     settings,
     pendingPairTv,
     toastMessage,
@@ -44,6 +46,7 @@ function MainApp() {
     sendPower,
     sendAppLink,
     updateSetting,
+    updateBackendHost,
   } = useTvConnection();
 
   const handleGetStarted = () => {
@@ -83,6 +86,8 @@ function MainApp() {
             savedTvs={savedTvs}
             isScanning={isScanning}
             settings={settings}
+            backendHost={backendHost}
+            isSocketConnected={isSocketConnected}
             onScan={scan}
             onConnect={(tv) => {
               connect(tv);
@@ -94,6 +99,7 @@ function MainApp() {
             onDisconnect={disconnect}
             onForgetTv={forgetTv}
             onUpdateSetting={updateSetting}
+            onUpdateBackendHost={updateBackendHost}
           />
         )}
 
@@ -152,4 +158,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

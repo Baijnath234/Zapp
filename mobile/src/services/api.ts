@@ -1,6 +1,10 @@
 import { DiscoveredTv, SavedTv, TvSettings, TvState } from '../types/tv';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/tv';
+let BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/tv';
+
+export function setApiHost(host: string, port = 3000) {
+  BASE_URL = `http://${host}:${port}/api/tv`;
+}
 
 export const tvApi = {
   async getStatus(): Promise<TvState> {
