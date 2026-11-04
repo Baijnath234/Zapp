@@ -15,6 +15,7 @@ import { WelcomeScreen } from './screens/WelcomeScreen';
 import { ConnectionScreen } from './screens/ConnectionScreen';
 import { RemoteScreen } from './screens/RemoteScreen';
 import { WifiDevicesScreen } from './screens/WifiDevicesScreen';
+import { CameraWifiScreen } from './screens/CameraWifiScreen';
 import { BottomNav } from './components/BottomNav';
 import { PairModal } from './components/PairModal';
 import { Toast } from './components/Toast';
@@ -62,7 +63,7 @@ function MainApp() {
     if (tvState.connected) {
       setCurrentView('remote');
     } else {
-      setCurrentView('wifi'); // Show Wi-Fi devices right after Welcome!
+      setCurrentView('wifi');
     }
   };
 
@@ -73,9 +74,14 @@ function MainApp() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={currentView === 'camera' ? 'light' : colorScheme === 'dark' ? 'light' : 'dark'} />
 
-      <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          currentView !== 'camera' && { paddingTop: insets.top },
+        ]}
+      >
         {/* Screen Views */}
         {currentView === 'welcome' && (
           <WelcomeScreen
@@ -109,6 +115,7 @@ function MainApp() {
             onForgetTv={forgetTv}
             onUpdateSetting={updateSetting}
             onUpdateBackendHost={updateBackendHost}
+            onOpenCamera={() => setCurrentView('camera')}
           />
         )}
 
@@ -140,12 +147,33 @@ function MainApp() {
               }
             }}
             onGoToRemote={() => setCurrentView('remote')}
+            onOpenCamera={() => setCurrentView('camera')}
+          />
+        )}
+
+        {currentView === 'camera' && (
+          <CameraWifiScreen
+            colors={colors}
+            wifiInfo={wifiInfo}
+            tvState={tvState}
+            onConnectIp={(ip) => {
+              connectByIp(ip);
+              setCurrentView('remote');
+            }}
+            onPairTv={(code) => {
+              pair(code);
+              setCurrentView('remote');
+            }}
+            onSendAppLink={sendAppLink}
+            onClose={() => setCurrentView('wifi')}
+            showToast={showToast}
+            hapticEnabled={settings.hapticFeedback}
           />
         )}
       </SafeAreaView>
 
-      {/* Persistent Bottom Tab Navigation (Shown on Remote, Connect & Wi-Fi screens) */}
-      {currentView !== 'welcome' && (
+      {/* Persistent Bottom Tab Navigation (Shown on Remote, Connect, Wi-Fi & Camera) */}
+      {currentView !== 'welcome' && currentView !== 'camera' && (
         <BottomNav
           colors={colors}
           currentView={currentView}

@@ -6,7 +6,7 @@ import { ViewType } from '../types/tv';
 interface BottomNavProps {
   colors: ThemeColors;
   currentView: ViewType;
-  onSelectView: (view: 'remote' | 'connect' | 'wifi') => void;
+  onSelectView: (view: 'remote' | 'connect' | 'wifi' | 'camera') => void;
   insetBottom?: number;
 }
 
@@ -70,7 +70,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               },
             ]}
           >
-            Connection
+            Connect
           </Text>
         </TouchableOpacity>
 
@@ -96,6 +96,29 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             Wi-Fi
           </Text>
         </TouchableOpacity>
+
+        {/* Camera Tab */}
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            currentView === 'camera' && { backgroundColor: colors.acc },
+          ]}
+          activeOpacity={0.8}
+          onPress={() => onSelectView('camera')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: currentView === 'camera' }}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color: currentView === 'camera' ? colors.accink : colors.mute,
+              },
+            ]}
+          >
+            Camera
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -105,14 +128,14 @@ const styles = StyleSheet.create({
   nav: {
     borderTopWidth: 1,
     paddingTop: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     alignItems: 'center',
   },
   navInner: {
     flexDirection: 'row',
     width: '100%',
-    maxWidth: 420,
-    gap: 8,
+    maxWidth: 440,
+    gap: 6,
     justifyContent: 'center',
   },
   tab: {
@@ -123,7 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
 });

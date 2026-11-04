@@ -29,6 +29,7 @@ interface ConnectionScreenProps {
   onForgetTv: (ip: string) => void;
   onUpdateSetting: (key: keyof TvSettings, value: boolean) => void;
   onUpdateBackendHost?: (host: string) => void;
+  onOpenCamera?: () => void;
 }
 
 export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
@@ -47,6 +48,7 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
   onForgetTv,
   onUpdateSetting,
   onUpdateBackendHost,
+  onOpenCamera,
 }) => {
   const [ipInput, setIpInput] = useState('');
   const [ipError, setIpError] = useState('');
@@ -255,6 +257,25 @@ export const ConnectionScreen: React.FC<ConnectionScreenProps> = ({
         <Text style={[styles.caption, { color: colors.mute, marginTop: 6 }]}>
           Find it on your TV under Settings, Network.
         </Text>
+
+        {onOpenCamera && (
+          <TouchableOpacity
+            style={[styles.cameraActionBtn, { backgroundColor: colors.key2 }]}
+            activeOpacity={0.7}
+            onPress={onOpenCamera}
+          >
+            <Text style={styles.cameraIcon}>📷</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cameraTitle, { color: colors.ink }]}>
+                Scan with Camera
+              </Text>
+              <Text style={[styles.cameraSub, { color: colors.mute }]}>
+                Scan QR or pairing code over Wi-Fi
+              </Text>
+            </View>
+            <Text style={[styles.cameraArrow, { color: colors.acc }]}>Open →</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 4. Saved TVs Card */}
@@ -622,6 +643,30 @@ const styles = StyleSheet.create({
   errText: {
     fontSize: 13,
     marginTop: 4,
+  },
+  cameraActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  cameraIcon: {
+    fontSize: 22,
+  },
+  cameraTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  cameraSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  cameraArrow: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   savedActions: {
     flexDirection: 'row',

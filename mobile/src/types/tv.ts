@@ -49,7 +49,7 @@ export interface TvSettings {
   hapticFeedback: boolean;
 }
 
-export type ViewType = 'welcome' | 'connect' | 'remote' | 'wifi';
+export type ViewType = 'welcome' | 'connect' | 'remote' | 'wifi' | 'camera';
 
 export type RemoteKey =
   | 'power'

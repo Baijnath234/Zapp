@@ -20,6 +20,7 @@ interface WifiDevicesScreenProps {
   onRefresh: () => void;
   onConnectTv: (tv: { ip: string; name?: string; model?: string }) => void;
   onGoToRemote: () => void;
+  onOpenCamera?: () => void;
 }
 
 export const WifiDevicesScreen: React.FC<WifiDevicesScreenProps> = ({
@@ -31,6 +32,7 @@ export const WifiDevicesScreen: React.FC<WifiDevicesScreenProps> = ({
   onRefresh,
   onConnectTv,
   onGoToRemote,
+  onOpenCamera,
 }) => {
   const getDeviceIconText = (type: string) => {
     switch (type) {
@@ -92,6 +94,25 @@ export const WifiDevicesScreen: React.FC<WifiDevicesScreenProps> = ({
             </Text>
           </View>
         </View>
+
+        {onOpenCamera && (
+          <TouchableOpacity
+            style={[styles.cameraActionBtn, { backgroundColor: colors.key2 }]}
+            activeOpacity={0.7}
+            onPress={onOpenCamera}
+          >
+            <Text style={styles.cameraEmoji}>📷</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cameraBtnTitle, { color: colors.ink }]}>
+                Access Camera with Wi-Fi
+              </Text>
+              <Text style={[styles.cameraBtnSub, { color: colors.mute }]}>
+                Scan TV pairing codes or stream camera to TV
+              </Text>
+            </View>
+            <Text style={[styles.cameraArrow, { color: colors.acc }]}>Open →</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 2. Backend & Docker PostgreSQL Card */}
@@ -292,6 +313,30 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 11,
+    fontWeight: '700',
+  },
+  cameraActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  cameraEmoji: {
+    fontSize: 22,
+  },
+  cameraBtnTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  cameraBtnSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  cameraArrow: {
+    fontSize: 13,
     fontWeight: '700',
   },
   cardHeader: {

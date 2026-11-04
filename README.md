@@ -19,6 +19,9 @@ A modern, high-performance Android TV remote application featuring a **NestJS** 
 ### Frontend (`/mobile`)
 - **Framework:** [React Native](https://reactnative.dev/) (Expo / Cross-Platform iOS, Android & Web)
 - **Language:** TypeScript
+- **Camera with Wi-Fi:** `expo-camera` (QR TV scanner, barcode pairing & live Wi-Fi camera streaming/casting)
+- **Network Discovery:** `expo-network` (real-time Wi-Fi IP detection and device subnet scanner)
+- **Persistence:** `@react-native-async-storage/async-storage` (offline-first storage for paired TVs & settings)
 - **Styling:** Custom theme system implementing the Zapp design specifications (Light and Dark mode)
 - **Icons & Graphics:** `react-native-svg` (custom animated Zapp TV frame, stand, transmitter dot, and signal wave arcs)
 - **Haptics:** `expo-haptics` with fallback to `navigator.vibrate` on web
@@ -59,7 +62,9 @@ Zapp/
 │   │   ├── screens/
 │   │   │   ├── WelcomeScreen.tsx              # Halo glow, logo, progress track, "Get started"
 │   │   │   ├── ConnectionScreen.tsx           # Status, mDNS scan, IP manual connect, saved TVs, toggles, FAQ
-│   │   │   └── RemoteScreen.tsx               # Top chip, TV preview bezel, Power, Source, Mute, D-Pad, 123 pad, Rockers
+│   │   │   ├── RemoteScreen.tsx               # Top chip, TV preview bezel, Power, Source, Mute, D-Pad, 123 pad, Rockers
+│   │   │   ├── WifiDevicesScreen.tsx          # Real-time Wi-Fi devices, IP hub & diagnostics
+│   │   │   └── CameraWifiScreen.tsx           # Camera scanner for TV QR/Wi-Fi & live video casting to TV
 │   │   ├── hooks/
 │   │   │   ├── useTvConnection.ts             # TV connection & WebSocket synchronization
 │   │   │   └── useHaptics.ts                  # Tactile vibration feedback
