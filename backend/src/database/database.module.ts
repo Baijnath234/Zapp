@@ -18,10 +18,14 @@ import { SettingEntity } from '../tv/entities/setting.entity';
         const databaseUrl = config.get<string>('DATABASE_URL');
         const synchronize = config.get<string>('DATABASE_SYNCHRONIZE', 'true') === 'true';
         const isProd = config.get<string>('NODE_ENV') === 'production';
+        const sslSetting = config.get<string>('DATABASE_SSL');
         const enableSsl =
-          config.get<string>('DATABASE_SSL') === 'true' ||
-          (databaseUrl && (databaseUrl.includes('sslmode=require') || databaseUrl.includes('ssl=true'))) ||
-          (isProd && !!databaseUrl);
+          sslSetting === 'true'
+            ? true
+            : sslSetting === 'false'
+            ? false
+            : (databaseUrl && (databaseUrl.includes('sslmode=require') || databaseUrl.includes('ssl=true'))) ||
+              (isProd && !!databaseUrl && !databaseUrl.includes('localhost') && !databaseUrl.includes('127.0.0.1'));
 
         const sslOptions = enableSsl ? { rejectUnauthorized: false } : false;
 

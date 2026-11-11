@@ -10,7 +10,9 @@
     "start:backend": "cd backend && npm run start:dev",
     "start:mobile": "cd mobile && npm run start",
     "build:backend": "cd backend && npm run build",
-    "typecheck:mobile": "cd mobile && npx tsc --noEmit"
+    "typecheck:mobile": "cd mobile && npx tsc --noEmit",
+    "build:mobile:apk": "cd mobile && npx eas build -p android --profile preview",
+    "export:mobile:web": "cd mobile && npx expo export -p web"
   },
   "keywords": [
     "android-tv",

@@ -5,22 +5,41 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "zapp",
     "userInterfaceStyle": "automatic",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#14131d"
     },
     "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#14131d"
+      "supportsTablet": true,
+      "bundleIdentifier": "com.baijnath.zapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Zapp needs camera access to scan TV pairing QR codes."
       }
     },
+    "android": {
+      "package": "com.baijnath.zapp",
+      "adaptiveIcon": {
+        "backgroundColor": "#14131d"
+      },
+      "permissions": [
+        "CAMERA",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE",
+        "CHANGE_WIFI_MULTICAST_STATE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Zapp to access your camera to scan TV pairing QR codes."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
   }
 }
-
